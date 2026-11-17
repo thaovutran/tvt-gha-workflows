@@ -1,0 +1,79 @@
+name: Hello-GHA-Workflows
+
+on:
+  workflow_dispatch:
+    inputs:
+      author:
+        required: true
+        type: string
+        default: 'Thao'
+      env:
+        required: true
+        type: choice
+        options:
+          - stg
+          - dev
+env:
+  WORKFLOW_VAR: iamWorkflowVar
+
+jobs:
+  hello-inline-bash:
+    name: Greeting Job
+    runs-on: ubuntu-22.04
+    env:
+      STEP_NAME_01: "Print the name of this step"
+    steps:
+      - name: ${{ env.STEP_NAME_01 }}
+        id: step_01
+        run: |
+          echo "stepId is: ${{ github.action }} or $GITHUB_ACTION"
+          echo "stepName is: $STEP_NAME_01"
+      - name: Print the name of this job
+        id: step_02
+        run: |
+          echo "stepId is: ${{ github.action }}"
+          echo "The jobName is: ${{ github.job }}"
+          echo "The jobName is: $GITHUB_JOB"
+          echo "The STEP_NAME_01 is: $STEP_NAME_01"
+  print-inputs:
+    env:
+      JOBS_VAR: iamJobsVar
+    name: Print out the input parameters
+    runs-on: ubuntu-22.04
+    needs: hello-inline-bash
+    steps:
+      - name: Print the input values
+        run: |
+          echo "Input values of this workflows: ${{ inputs.author }} and ${{ inputs.env }}"
+          echo "The JOBS_VAR is: $JOBS_VAR"
+  vars_shown:
+    name: Print out all kinds of var
+    runs-on: ubuntu-22.04
+    steps:
+      - name: How vars printed out
+        run: |
+          echo "The WORKFLOW_VAR is: $WORKFLOW_VAR"
+          echo "The JOBS_VAR is not here: $JOBS_VAR"
+  secrets_env_vars:
+    name: Print environment and repository settings
+    runs-on: ubuntu-22.04
+    environment: ${{ inputs.env }}
+    steps:
+      - name: List variable names
+        run: |
+          echo '${{ toJSON(vars) }}' | jq -r 'keys[]'
+      - name: List secret names
+        env:
+          GH_TOKEN: ${{ secrets.MY_GHA_TOKEN }}
+        run: |
+          gh secret list --repo ${{ github.repository }}
+          gh secret list --repo ${{ github.repository }} --env ${{ inputs.env }}
+      - name: Fetch variables and secret values
+        env:
+          SECRET_EXAMPLE: ${{ secrets.SECRET_EXAMPLE }}
+          VAR_EXAMPLE: ${{ vars.VAR_EXAMPLE }}
+        run: |
+          echo "The ${{ inputs.env }} envVar is: $VAR_EXAMPLE"
+          echo "The ${{ inputs.env }} envSecret is: $SECRET_EXAMPLE"
+          echo "The repoSecret is: ${{ secrets.TVT_GHA_SECRET }}"
+          echo "The repoVar is: ${{ vars.TVT_GHA_VARIABLE }}"
