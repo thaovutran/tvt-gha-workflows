@@ -1,4 +1,4 @@
-name: Hello-GHA-Workflows
+name: GH200-Workflow-01
 
 on:
   workflow_dispatch:
